@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
 from django.utils.html import mark_safe
+from .search import PropertyIndex
 # from markdown import markdown
 
 class Board(models.Model):
@@ -28,6 +29,25 @@ class Topic(models.Model):
 
     def __str__(self):
     	return self.subject
+
+    def indexing(self):
+
+        """
+
+        Add index on elastic search doc
+
+        """
+        
+        obj = PropertyIndex(
+
+            meta={'id': self.id},
+
+            subject=self.subject,
+        )
+
+        obj.save(index="property_index")
+
+        return obj.to_dict(include_meta=True)
 
 
 class Post(models.Model):

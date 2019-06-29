@@ -77,3 +77,42 @@ class ReplyTopic(APIView):
 			post.created_by = topic.starter
 			post.save()
 			return redirect('topic_posts', pk=pk, topic_pk=topic_pk)
+
+
+class ElasticSearchApi(APIView):
+	def post(self, request):
+
+		try:
+			search_value = (request.data).get('search_value')
+
+			search_value_format = '"{}"'.format(search_value)
+
+			# Filter data from ElasticSeach dataset
+
+			es = Elasticsearch()
+
+			search = Search(using=es)
+
+			s = search.update_from_dict(
+
+				{"query": {"multi_match": {"fields": [
+
+					"city", "state", "address", "zipcode"], "query": search_value_format, "type": "phrase_prefix"}}}
+
+			)
+
+			total = s.count()
+
+			s = s[0:25]
+
+			response = s.execute()
+
+			data = response.hits.hits
+
+			data = {"data": data}
+
+			return Response(data, status=status.HTTP_200_OK)
+
+			except Exception as error:
+
+			return Response(status=status.HTTP_404_NOT_FOUND)
